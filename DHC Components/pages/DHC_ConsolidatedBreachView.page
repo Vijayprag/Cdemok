@@ -1,0 +1,14 @@
+<apex:page controller="DHC_ConRuntimeBreachViewController" contentType="application/vnd.ms-excel#RunTimeLimitBreachExport.xls" cache="true">
+    <apex:pageBlock title="RunTime Limit Breaches Export Results" >
+        <apex:pageBlockTable value="{!runTimelimitNotificationList}" var="breach">
+            <apex:column value="{!breach.Display_Name__c}"/>
+            <apex:column value="{!breach.Priority__c}"/>
+            <apex:column value="{!breach.Sobject_Name__c}"/>
+            <apex:column value="{!breach.Component_Name__c}"/>
+            <apex:column value="{!breach.Limit_Utilization__c}"/>
+            <apex:column value="{!breach.Max_Limit__c}"/>
+            <apex:column value="{!breach.First_Breach__c}"/>
+            <apex:column value="{!breach.Latest_Breach__c}"/>
+        </apex:pageBlockTable>
+    </apex:pageBlock>
+</apex:page>

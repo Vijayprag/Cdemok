@@ -1,0 +1,369 @@
+<apex:page controller="DHC_SystemLimitUsageController" sidebar="false" showHeader="false"  >
+    <!-- Start - Include Script and HighCharts-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" />
+    <apex:includeScript value="{!URLFOR($Resource.DHC_DesignResource,'/js/jquery.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.DHC_RESOURCE,'/DHC_RESOURCE/jquery-ui.css')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.DHC_RESOURCE,'/DHC_RESOURCE/jquery-ui.js')}"/>
+    <!-- END - Include Script and HighCharts-->
+    
+    <!-- Start CSS for Form and Buttons --> 
+    <style>
+        .maindiv{
+        width:100%;
+        float:left;
+        }
+        .topHeader{
+        width:100%;
+        height:100px;
+        float:left;
+        
+        box-sizing: border-box;
+        border: 2px solid #ecf0f1;
+        }
+        .midBlock{
+        width:100%;
+        height:300px;
+        float:left;
+        background-color: rgba(22, 50, 92, 0.82);
+        box-sizing: border-box;
+        border: 2px solid rgba(22, 50, 92, 0.82);
+        }
+        .firstBlockTitle{
+        width:33.3%;
+        float:left;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        background-color: #84DA39;
+        }
+        .secondBlockTitle{
+        width:33.3%;
+        float:left;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        background-color: #51C2FF;
+        }
+        .thirdBlockTitle{
+        width:33.3%;
+        float:left;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        background-color: #FFBC00;
+        }
+        
+        .firstBlock{
+        width:33.3%;
+        height:145px;
+        float:left;
+        box-sizing: border-box;
+        background-color: #f8f8f8;
+        }
+        .secondBlock{
+        width:33.3%;
+        height:145px;
+        float:left;
+        box-sizing: border-box;
+        background-color: #f8f8f8;
+        }
+        .thirdBlock{
+        width:33.3%;
+        height:145px;
+        float:left;
+        box-sizing: border-box;
+        background-color: #f8f8f8;
+        }
+        .carousel-control.left {
+            background-image: -webkit-gradient(linear,left top,right top,from(rgba(0,0,0,.5)),to(rgba(0,0,0,.0001)));
+            background-image: -webkit-linear-gradient(left,rgba(0,0,0,.5) 0,rgba(0,0,0,.0001) 100%);
+            background-image: -o-linear-gradient(left,rgba(0,0,0,.5) 0,rgba(0,0,0,.0001) 100%);
+            background-image: linear-gradient(to right,rgba(0,0,0,.5) 0,rgba(0,0,0,.0001) 100%);
+            background-repeat: repeat-x;
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#80000000', endColorstr='#00000000', GradientType=1);
+        }
+        .carousel-control {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 5%;
+            font-size: 20px;
+            color: #fff;
+            text-align: center;
+            text-shadow: 0 1px 2px rgba(0,0,0,.6);
+            opacity: .5;
+            cursor: pointer;
+            z-index: 1500;
+        }
+        .carousel-control:hover{
+            opacity: .7;
+        }
+        
+        .carousel-control .icon-prev::before {
+            content: "\2039";
+        }
+        
+        .carousel-control .icon-next::before {
+            content: "\203a";
+        }
+        
+        .carousel-control .icon-prev{
+            position: absolute;
+            top: 40%;
+            font-size: 40px;
+            left: 15px;
+        }
+        
+        .carousel-control .icon-next{
+            position: absolute;
+            top: 40%;
+            font-size: 40px;
+            left: auto;
+            right: 15px;
+        }
+        
+        .carousel-control.right {
+            right: 0px;
+            left: auto;
+            background-image: -webkit-gradient(linear,left top,right top,from(rgba(0,0,0,.0001)),to(rgba(0,0,0,.5)));
+            background-image: -webkit-linear-gradient(left,rgba(0,0,0,.0001) 0,rgba(0,0,0,.5) 100%);
+            background-image: -o-linear-gradient(left,rgba(0,0,0,.0001) 0,rgba(0,0,0,.5) 100%);
+            background-image: linear-gradient(to right,rgba(0,0,0,.0001) 0,rgba(0,0,0,.5) 100%);
+            background-repeat: repeat-x;
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#80000000', GradientType=1);
+        }
+        #chartdiv {
+            width       : 100%;
+            height      : 370px;
+            font-size   : 11px;
+        }  
+       .buttonCls{
+            padding-left: 1rem;
+            padding-right: 1rem;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid #d8dde6;
+            background-color: white;
+            line-height: 1.75rem;
+            min-height: 2rem;
+            position: relative;
+            display: inline-block;
+            padding: 0;
+            background: transparent;
+            background-clip: border-box;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            text-decoration: none;
+            color: #0070d2;
+            -webkit-appearance: none;
+            white-space: normal;
+            -webkit-user-select: none;
+            transition: color 0.05s linear, background-color 0.05s linear;
+            cursor: pointer;
+            text-transform: none;
+            width: 75px;
+        } 
+        .buttonCls:hover{
+            background-color: #d8dde6;
+            //width: 78px;
+            
+        }
+    
+        /**** tooltop css ***/
+          .tooltip1 {
+          position: relative;
+          display: inline-block;
+          //border-bottom: 1px dotted black;
+          }
+          .tooltip1 .tooltiptext ,.tooltip1 .tooltiptextOnClick{
+          visibility: hidden;
+          width: 140px;
+          background-color: black;
+          color: #fff;
+          text-align: center;
+          border-radius: 6px;
+          padding: 5px 0;
+          position: absolute;
+          bottom: 100%;
+          z-index: 1500 !important;
+          left: 50%;
+          margin-left: -140px;
+          font-size: 13px;
+          }
+          .tooltip1 .tooltiptext::after, .tooltip1 .tooltiptextOnClick::after{
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 100%;
+          margin-left: -5px;
+          border-width: 5px;
+          border-style: solid;
+          border-color: black transparent transparent transparent;
+          }
+          .tooltip1:hover .tooltiptext {
+          visibility: visible;
+          }
+          /**** tooltop css ***/
+          .ui-dialog{
+            position: absolute;
+            height: auto;
+            width: 610.2px !important;
+            top: 158.5px !important;
+            left: 444px !important;
+            display: block;
+            z-index: 101;
+            
+          }
+          
+          .videoContainer{
+            display: none;
+          }
+          .blinkText{
+            animation-name: example;
+            animation-duration: 5s;
+            animation-iteration-count: infinite;
+            color: #333435;
+            position: relative;
+            font-size: 33px;
+        }
+          
+          @keyframes example {
+            0%   {color: #333435; left:0px; top:0px; }
+            25%  {color: #84da39; left:0px; top:0px;}
+            50%  {color: #51c2ff;left:0px; top:0px; }
+            75%  {color: #ffbc00; left:0px; top:0px; }
+            100% {color: #333435; left:0px; top:0px; }
+        }
+    </style>
+    <!-- End CSS for Form and Buttons -->
+
+    <!-- Start - Script for TAKE A TOUR POPUP -->
+    <script>
+        function refreshlimit(){
+            refresh();
+        }
+       
+    </script>
+    <!-- END - Script for TAKE A TOUR POPUP -->
+    <apex:form >
+        <apex:actionFunction name="refresh" action="{!refreshMaxLimit}" />
+        <div class="dialogBoxCls" id="dialog-message" title="Quick Tour : Dynamic Health Check Tool">
+            <div class="videoContainer" style="width: 500px; float: left;">
+                <iframe width="560" height="315" src="" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
+            </div>
+            <!--<div class="messageContainer" style="width: auto; float: left;">
+                  <p>
+                    <span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>
+                   {!$Label.DHC_ToolDescription} <br/>
+                    {!$Label.DHC_ToolSubDescription}<br/> 
+                    {!$Label.DHC_ToolSub1Description}  <br/>
+                  </p>
+                  <p>
+                    <b>{!$Label.DHC_Quick_Tour}</b>.
+                  </p>
+            </div>-->
+        </div>
+        <div class="maindiv">
+           <div class="topHeader">
+                <div style="float:left;">
+                    <apex:image url="/servlet/servlet.FileDownload?file={!fieldID}" height="100px"/>
+                </div>
+                <div style="float:right;padding-top: 26px;">
+                    
+                    <div class="tooltip1">
+                        
+                        <a href="/home/home.jsp" >
+                            <i class="fa fa-home" style="font-size:37px;cursor: pointer;padding-right: 20px;" aria-hidden="true"></i>
+                        </a>
+                        <span class="tooltiptext">
+                            {!$Label.DHC_Back_To_Home}
+                        </span>
+                    </div>
+                    <div class="tooltip1">
+                        <a href="" onclick="refreshlimit()" >
+                            <i class="fa fa-refresh"  style="font-size: 33px;cursor: pointer;" aria-hidden="true"></i>
+                        </a>
+                        <span class="tooltiptext">
+                            {!$Label.DHC_Refresh_Limits}
+                        </span>
+                    </div>
+                    <div class="tooltip1">
+                        <a href="" onclick="window.open({!$label.DHC_SetThresholdURL});" >
+                            <i class="fa fa-wrench"  style="font-size: 33px; padding-left: 10px;cursor: pointer;" aria-hidden="true"></i>
+                        </a>
+                        <span class="tooltiptext">
+                            {!$Label.DHC_Setup_Data}
+                        </span>
+                    </div>
+                 </div>
+            </div>
+            <div class="midBlock">
+                <div style="float:left; width:50%;">
+                    <p style="color:white;padding-top: 32px;padding-left: 44px;}">
+                        <span style="font-size: 25px;">
+                            {!$Label.DHC_MainPage}
+                        </span><br/><br/><br/>
+                        <span style="font-size: 17px;">
+                            {!$Label.DHC_ToolDescription}   
+                        </span><br/><br/>
+                        <span style="font-size: 17px;">
+                            &nbsp;  {!$Label.DHC_ToolSubDescription}
+                        </span><br/>
+                        <span style="font-size: 17px;">
+                            &nbsp;  {!$Label.DHC_ToolSub1Description}  
+                        </span><br/>
+                    </p>
+                </div>
+                <div style="float:left; width:50%;">
+                    <div style="background: url('{!$Resource.PerformanceImage}'); width: 520px; height: 220px; float: left;margin-top: 43px;"></div>
+                </div>
+            </div>
+            <div style=" width:100%;position: relative; float: left;">
+                <div class="firstBlockTitle individualBlockContainer">
+                    <div style="width: 100%; float: left;">
+                        <center>
+                            <p style="color: black;letter-spacing: 1px;font-weight: bold;font-family: Arial,Helvetica,sans-serif;font-size: 16px;">{!$Label.DHC_Organization_Limit}</p>
+                        </center>
+                    </div>
+                    <div class="firstBlock" style="width: 100%; float: left;">
+                        <div style="width: 100%; float: left; text-align: center; margin-top: 30px;"> 
+                            <div style="width: 100%; float: left;">{!$Label.DHC_Organization_Description}  </div>
+                            <div style="width: 100%; float: left;">{!$Label.DHC_Organization_Sub_Description} </div>
+                            <input type="button" style="margin-top: 39px;" class="buttonCls" value="{!$Label.DHC_View}" onclick="window.open({!$Label.DHC_DailyLimitURL});" />
+                            <input type="button" style="margin-top: 39px;" class="buttonCls" value="{!$Label.DHC_Download}" onclick="window.open({!$Label.DHC_ConsolidationURL});" />
+                        </div>
+                    </div>
+                </div>
+                <div class="secondBlockTitle individualBlockContainer">
+                    <div style="width: 100%; float: left;">
+                        <center>
+                            <p style="color: black;letter-spacing: 1px;font-weight: bold;font-family: Arial,Helvetica,sans-serif;font-size: 16px;;">{!$Label.DHC_Runtime_Limit}</p>
+                        </center>
+                    </div>
+                    <div class="secondBlock" style="width: 100%; float:left;">
+                        <div style="width: 100%; float: left; text-align: center; margin-top: 30px;"> 
+                            <div style="width: 100%; float: left;">{!$Label.DHC_Runtime_Description}</div>
+                            <div style="width: 100%; float: left;">{!$Label.DHC_Runtime_Sub_Description}</div>
+                            <input type="button" style="margin-top: 39px;" class="buttonCls" value="{!$Label.DHC_View}" onclick="window.open('DHC_StaticLimitUsage')" />
+                            <input type="button" style="margin-top: 39px;" class="buttonCls" value="{!$Label.DHC_Download}" onclick="window.open('DHC_ConsolidatedBreachView')" />
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="thirdBlockTitle individualBlockContainer">
+                    <div style="width: 100%; float: left;">
+                        <center>
+                            <p style="color: black;letter-spacing: 1px;font-weight: bold;font-family: Arial,Helvetica,sans-serif;font-size: 16px;">{!$Label.DHC_Error_Exception}</p>
+                        </center>
+                    </div>
+                    <div class="thirdBlock" style="width: 100%; float: left;">
+                        <div style="width: 100%; float: left; text-align: center; margin-top: 30px;">
+                            <div style="width: 100%; float: left;">{!$Label.DHC_Error_Description} </div>
+                            <input type="button" style="margin-top: 53px;" class="buttonCls" value="{!$Label.DHC_View}" onclick="window.open({!$Label.DHC_ErrorLogReportURL})" />
+                            <input type="button" style="margin-top: 53px;" class="buttonCls" value="{!$Label.DHC_Download}" onclick="window.open({!$Label.DHC_ErrorLogConsolidated})"/>
+                        </div>
+                    </div>
+                </div>
+            </div>              
+        </div>
+    </apex:form>
+</apex:page>

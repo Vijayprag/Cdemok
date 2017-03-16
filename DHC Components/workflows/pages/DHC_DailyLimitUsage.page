@@ -1,0 +1,733 @@
+<apex:page controller="DHC_DailyLimitController" sidebar="false" >
+    <!-- Start Include Script -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" />
+    <apex:includeScript value="{!URLFOR($Resource.DHC_DesignResource,'/js/jquery.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.DHC_RESOURCE,'/DHC_RESOURCE/jquery-ui.css')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.DHC_RESOURCE,'/DHC_RESOURCE/jquery-ui.js')}"/>
+    <!-- End Include Script -->
+    <!-- Start Script for Accordian -->
+    <script>
+        
+        $( function() {
+            $( document ).tooltip();
+        } );
+    </script>
+    <script>
+        $( function() {
+            $(".containerToggleHeader").click(function(){
+                console.log("containerToggleHeader fired...");
+                var idOfDetailContainer = $(this).attr("id");
+                console.log("idOfDetailContainer : " + idOfDetailContainer);
+                $(".limitContainer").hide();
+                
+                $(".minMaxIcon").each(function(){
+                    if($(this).hasClass("fa-minus-square")){
+                    console.log('fa-minus-square++++');
+                        $(this).removeClass("fa-minus-square");
+                        $(this).addClass("fa-plus-square");
+                    }
+                });
+                
+                if($("." + idOfDetailContainer).hasClass("activeTab")){
+                    $("." + idOfDetailContainer).slideUp(500);
+                    $("." + idOfDetailContainer).removeClass("activeTab");
+                }
+                else{
+                    $(".limitContainer").removeClass("activeTab");
+                    $("." + idOfDetailContainer).slideDown(300);
+                    $("." + idOfDetailContainer).addClass("activeTab");
+                    
+                    $(this).find(".fa").each(function(){
+                        if($(this).hasClass("fa-plus-square")){
+                        console.log('fa-plus-square');
+                            $(this).removeClass("fa-plus-square");
+                            $(this).addClass("fa-minus-square");
+                        }
+                       
+                    }); 
+                }
+            });
+
+        });
+        function whenClicked() {
+           window.top.close();
+           opener.location.href = "/apex/DHC_SYSTEMLIMITUSAGE";
+        }
+    </script>
+    <!-- END Script for Accordian -->
+    <!-- Start CSS For FORM and BUTTONS -->
+    <style>
+        .tableset{
+            width: 100%;
+            float: left;
+        }
+        a{
+            color:#1797c0;
+        }
+        
+        .tableset thead tr th, .tableset tbody tr td{
+            text-align: left;
+            padding: 8px 20px 8px 15px;
+            border: 1px solid #f2f3f3;      
+        }
+        
+        .tableset thead tr th{
+            background-color: #1797c0;
+            border: 1px solid #ccc; 
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 1px black;
+      
+        }
+         .containerToggleHeader:hover{
+            box-shadow: 0px 0px 2px 2px #ccc;
+        }
+        
+        .grad2 {
+            background: #3498db; /* For browsers that do not support gradients */
+            background: -webkit-linear-gradient(#3498db, #13496c); /* For Safari 5.1 to 6.0 */
+            background: -o-linear-gradient(#3498db, #13496c); /* For Opera 11.1 to 12.0 */
+            background: -moz-linear-gradient(#3498db, #13496c); /* For Firefox 3.6 to 15 */
+            background: linear-gradient(#3498db, #13496c); /* Standard syntax */
+        }
+        
+        .grad1 {
+          background: #1797c0 ;  /* For browsers that do not support gradients */
+          background: -webkit-linear-gradient(left, #1797c0, #1797c0, #1797c0 , #13496c); /* For Safari 5.1 to 6.0 */
+          background: -o-linear-gradient(right, #1797c0, #1797c0, #1797c0, #13496c); /* For Opera 11.1 to 12.0 */
+          background: -moz-linear-gradient(right, #1797c0, #1797c0, #1797c0, #13496c); /* For Firefox 3.6 to 15 */
+          background: linear-gradient(to right, #1797c0, #1797c0,  #1797c0, #13496c); /* Standard syntax */
+        }
+    </style>
+    <!-- END CSS For FORM and BUTTONS -->
+    <apex:form >
+        <apex:outputPanel rendered="{!offlineCheck}">
+                <div style="float:left;">
+                    <div style="float:left;">
+                    <a href="#" onclick="whenClicked()">
+                        <i class="fa fa-arrow-circle-left" aria-hidden="true" style="padding-right:10px;padding-top: 4px; float: left; font-size: 46px; color: #1797c0;">
+                        </i>
+                        <div style="float: left;padding-top: 15px;font-size: 17px;font-weight: bolder;color: #1797c0;    padding-right: 10px;">{!$Label.DHC_Back}
+                </div>
+                    </a>
+               </div>
+               
+                <div style="float:left;">
+                    <apex:outputLink value="/apex/DHC_DailyLimitUsage"><i class="fa fa-clock-o" style=" font-size: 48px;color:#1797c0;float:left;" aria-hidden="true">
+                    </i> <div style="float: left;padding-top: 15px;font-size: 17px;padding-left: 6px;font-weight: bolder;color: #1797c0;"> {!$Label.DHC_Latest_Report}
+                </div> </apex:outputLink>
+                 </div>
+               
+                </div>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!runtimeCheck}">
+            <div style="float:left;">
+               <div style="float:left;">
+                    <a href="#" onclick="whenClicked()">
+                        <i class="fa fa-arrow-circle-left" aria-hidden="true" style="padding-right:10px;padding-top: 4px; float: left; font-size: 46px; color: #1797c0;">
+                        </i>
+                        <div style="float: left;padding-top: 15px;font-size: 17px;font-weight: bolder;color: #1797c0;    padding-right: 10px;">{!$Label.DHC_Back}
+                        </div>
+                    </a>
+               </div>
+               <div style="float:left;">
+                    <apex:commandlink action="{!callgetLimitFromPage}"> <i class="fa fa-clock-o" style=" font-size: 48px;color:#1797c0;float:left;" aria-hidden="true">
+                    </i> <div style="float: left;padding-top: 15px;font-size: 17px;padding-left: 6px;font-weight: bolder;color: #1797c0;"> {!$Label.DHC_Last_Run_Report}
+                </div></apex:commandlink>
+               </div>
+                
+            </div>
+        </apex:outputPanel>
+        <div style="width: 100%; float: left;">
+            <div style="width: 100%; float: left;">
+                <div id="RunTimeLimitTypeContainer" class="containerToggleHeader grad1" style="width: 100%; float: left; padding: 8px 0px 8px 20px;  box-sizing: border-box; cursor: pointer; color: white; font-size:16px;">
+                    {!$Label.DHC_Daily_Limit}
+                    <i class="fa fa-minus-square minMaxIcon" aria-hidden="true" style="float: right; height:5px; width: 20px;"></i>
+                </div>
+                <div style="width: 100%; float: left; box-shadow: 0px 0px 2px 2px #ccc;">
+                     <div class="RunTimeLimitTypeContainer limitContainer activeTab" style="margin: 0 auto; width:97%;padding-top: 5px;">
+                        <div style="float:left; width:100%; margin-bottom: 10px;">
+                            <apex:outputPanel rendered="{!offlineCheck}">
+                                <table class="tableset" cellspacing="0px" style="border-collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                            {!$Label.DHC_Limit}
+                                            </th>
+                                            <th style="text-align: center;">
+                                             {!$Label.DHC_Status} 
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Total_Limit}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Utilization}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Percentage_Used}
+                                            </th>                                       
+                                            <th style="text-align: left;">
+                                             {!$Label.DHC_Measure_Action}
+                                            </th>                                       
+                                        </tr>
+                                    </thead>
+                                    <tbody>             
+                                        <apex:repeat var="cases" value="{!dailylimitNotification}">
+                                        <tr>               
+                                            <td class="tdset" style="{!IF(cases.Priority__c == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;',IF(cases.Priority__c == 'Yellow','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #2ecc71; border-top-left-radius: 5px; border-bottom-left-radius: 5px;'))}">
+                                             {!cases.Display_Name__c}
+                                            </td>
+                                            <td class="tdset" style="text-align: center;" >
+                                                <i class="fa fa-font-awesome" style="{!IF(cases.Priority__c == 'Red','color: #ce4844; font-size: 15px;',IF(cases.Priority__c == 'Yellow','color: #F9BF3B; font-size: 15px;','color: #2ecc71; font-size: 15px;'))}
+                                                "></i>
+                                            </td>
+                                            <td class="tdset" style="text-align: right;">
+                                                {!cases.Max_Limit__c}
+                                            </td>
+                                            <td class="tdset" style="text-align: right;">
+                                                {!cases.Limit_Utilization__c}
+                                            </td> 
+                                            <td class="tdset" style="text-align: right;">
+                                                {!cases.Percentage_Used__c} %
+                                            </td>
+                                         
+                                            <td class="tdset" style="text-align: left;">
+                                                 <apex:outputPanel rendered="{!IF(OR(cases.Priority__c == 'Red',cases.Priority__c == 'Yellow'), TRUE, FALSE)}">
+                                                    {!cases.Measure__c}
+                                                 </apex:outputPanel>
+                                                 <apex:outputPanel rendered="{!IF(AND(cases.Priority__c != 'Red',cases.Priority__c != 'Yellow'), TRUE, FALSE)}">
+                                                    -
+                                                 </apex:outputPanel>
+                                            </td>
+                                            
+                                       </tr>
+                                       </apex:repeat>
+                                   </tbody>            
+                                </table>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!runtimeCheck}">
+                                <table class="tableset" cellspacing="0px" style="border-collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                            {!$Label.DHC_Limit}
+                                            </th>
+                                            <th style="text-align: center;">
+                                             {!$Label.DHC_Status} 
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Total_Limit}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Utilization}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Percentage_Used}
+                                            </th>                                       
+                                            <th style="text-align: left;">
+                                             {!$Label.DHC_Measure_Action}
+                                            </th>    
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        <apex:repeat var="str" value="{!ListofDailyLimits}" >
+                                            <tr>
+                                                <td class="tdset" style="{!IF(str.priorstr == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;',IF(str.priorstr == 'Yellow','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #2ecc71; border-top-left-radius: 5px; border-bottom-left-radius: 5px;'))}">
+                                                     
+                                                    <apex:outputText value="{!str.resourcename}"/>
+                                                </td>
+                                                <td class="tdset" style="text-align: center;" >
+                                                    <i class="fa fa-font-awesome" style="{!IF(str.priorstr == 'Red','color: #ce4844; font-size: 15px;',IF(str.priorstr == 'Yellow','color: #F9BF3B; font-size: 15px;','color: #2ecc71; font-size: 15px;'))}
+                                                    "></i>
+                                                    
+                                                </td>
+                                                <td class="tdset" style="text-align: right;">
+                                                    {!str.MaxLimit}
+                                                </td>
+                                                <td class="tdset" style="text-align: right;">
+                                                    {!str.Remaining}
+                                                </td>
+                                                <td class="tdset" style="text-align: right;">
+                                                    {!str.PercentageUsed} %
+                                                </td>
+                                                <td class="tdset" style="text-align: left;">
+                                                 <apex:outputPanel rendered="{!IF(OR(str.priorstr == 'Red',str.priorstr == 'Yellow'), TRUE, FALSE)}">
+                                                    {!str.measureStr}
+                                                </apex:outputPanel>
+                                                 <apex:outputPanel rendered="{!IF(AND(str.priorstr != 'Red',str.priorstr != 'Yellow'), TRUE, FALSE)}">
+                                                   -
+                                                </apex:outputPanel>
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </tbody> 
+                                </table>
+                            </apex:outputPanel>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="width: 100%; float: left;">
+            <div style="width: 100%; float: left;">     
+                <div id="RunTimeLimitSobjectContainer" class="containerToggleHeader grad1" style="width: 100%; float: left; padding: 8px 0px 8px 20px;  box-sizing: border-box; cursor: pointer; margin-top: 10px; color: white;font-size:16px;">
+                    {!$Label.DHC_Hourly_Limit}
+                    <i class="fa fa-plus-square minMaxIcon" aria-hidden="true" style="float: right; height:5px; width: 20px;"></i>
+                </div>
+                <div style="width: 100%; float: left; box-shadow: 0px 0px 2px 2px #ccc;">
+                    <div class="RunTimeLimitSobjectContainer limitContainer" style="margin: 0 auto; width:97%;padding-top: 5px;display: none;">
+                        <div style="float:left; width:100%; margin-bottom: 10px;">
+                            <apex:outputPanel rendered="{!offlineCheck}">
+                                <table class="tableset" cellspacing="0px" style="border-collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                            {!$Label.DHC_Limit}
+                                            </th>
+                                            <th style="text-align: center;">
+                                             {!$Label.DHC_Status} 
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Total_Limit}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Utilization}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Percentage_Used}
+                                            </th>                                       
+                                            <th style="text-align: left;">
+                                             {!$Label.DHC_Measure_Action}
+                                            </th>                                           
+                                        </tr>
+                                    </thead>
+                                    <tbody>             
+                                        <apex:repeat var="cases" value="{!hourlylimitNotification}">
+                                        <tr>               
+                                            <td class="tdset" style="{!IF(cases.Priority__c == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;',IF(cases.Priority__c == 'Yellow','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #2ecc71; border-top-left-radius: 5px; border-bottom-left-radius: 5px;'))}">
+                                            
+                                            {!cases.Display_Name__c}
+                                            </td>
+                                            <td class="tdset" style="text-align: center;" >
+                                                <i class="fa fa-font-awesome" style="{!IF(cases.Priority__c == 'Red','color: #ce4844; font-size: 15px;',IF(cases.Priority__c == 'Yellow','color: #F9BF3B; font-size: 15px;','color: #2ecc71; font-size: 15px;'))}
+                                                "></i>
+                                            </td>
+                                            <td class="tdset" style="text-align: right;">
+                                            {!cases.Max_Limit__c}
+                                            </td>
+                                            <td class="tdset" style="text-align: right;">
+                                            {!cases.LImit_Utilization__c}
+                                            </td>
+                                             <td class="tdset" style="text-align: right;">
+                                            {!cases.Percentage_Used__c} %
+                                            </td>
+                                            <td class="tdset" style="text-align: left;">
+                                             <apex:outputPanel rendered="{!IF(OR(cases.Priority__c == 'Red',cases.Priority__c == 'Yellow'), TRUE, FALSE)}">
+                                            {!cases.Measure__c}
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!IF(AND(cases.Priority__c != 'Red',cases.Priority__c != 'Yellow'), TRUE, FALSE)}">
+                                             - 
+                                            </apex:outputPanel>
+                                            </td>
+                                        </tr>
+                                       </apex:repeat>
+                                   </tbody>            
+                                </table>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!runtimeCheck}">
+                                <table class="tableset" cellspacing="0px" style="border-collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                            {!$Label.DHC_Limit}
+                                            </th>
+                                            <th style="text-align: center;">
+                                             {!$Label.DHC_Status} 
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Total_Limit}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Utilization}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Percentage_Used}
+                                            </th>                                       
+                                            <th style="text-align: left;">
+                                             {!$Label.DHC_Measure_Action}
+                                            </th> 
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        <apex:repeat var="str" value="{!ListofHourlyLimits}" >
+                                            <tr>
+                                                <td class="tdset" style="{!IF(str.priorstr == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;',IF(str.priorstr == 'Yellow','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #2ecc71; border-top-left-radius: 5px; border-bottom-left-radius: 5px;'))}">
+                                                     
+                                                    <apex:outputText value="{!str.resourcename}"/>
+                                                </td>
+                                                <td class="tdset" style="text-align: center;" >
+                                                     <i class="fa fa-font-awesome" style="{!IF(str.priorstr == 'Red','color: #ce4844; font-size: 15px;',IF(str.priorstr == 'Yellow','color: #F9BF3B; font-size: 15px;','color: #2ecc71; font-size: 15px;'))}
+                                                    "></i>
+                                                </td>
+                                                <td class="tdset" style="text-align: right;">
+                                                    {!str.MaxLimit}
+                                                </td>
+                                                <td class="tdset" style="text-align: right;">
+                                                    {!str.Remaining}
+                                                </td>
+                                                <td class="tdset" style="text-align: right;">
+                                                    {!str.PercentageUsed} %
+                                                </td>
+                                                <td class="tdset" style="text-align: left;">
+                                                    <apex:outputPanel rendered="{!IF(OR(str.priorstr == 'Red',str.priorstr == 'Yellow'), TRUE, FALSE)}">
+                                                    {!str.measureStr}
+                                                    </apex:outputPanel>
+                                                     <apex:outputPanel rendered="{!IF(AND(str.priorstr != 'Red',str.priorstr != 'Yellow'), TRUE, FALSE)}">
+                                                    - 
+                                                    </apex:outputPanel>
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </tbody> 
+                                </table>
+                            </apex:outputPanel>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="width: 100%; float: left;">
+            <div style="width: 100%; float: left;">
+                <div id="RunTimeLimitComponentContainer" class="containerToggleHeader grad1" style="width: 100%; float: left; padding: 8px 0px 8px 20px;  box-sizing: border-box; cursor: pointer; margin-top: 10px; color: white;font-size:16px;">
+                    {!$Label.DHC_Concurrent_Limit}
+                    <i class="fa fa-plus-square minMaxIcon" aria-hidden="true" style="float: right; height:5px; width: 20px;"></i>
+                </div>
+                <div style="width: 100%; float: left; box-shadow: 0px 0px 2px 2px #ccc;">
+                    <div class="RunTimeLimitComponentContainer  limitContainer" style="margin: 0 auto; width:97%;padding-top: 5px;display: none;">
+                        <div style="float:left; width:100%; margin-bottom: 10px;">
+                            <apex:outputPanel rendered="{!offlineCheck}">
+                                <table class="tableset" cellspacing="0px" style="border-collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                            {!$Label.DHC_Limit}
+                                            </th>
+                                            <th style="text-align: center;">
+                                             {!$Label.DHC_Status} 
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Total_Limit}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Utilization}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Percentage_Used}
+                                            </th>                                       
+                                            <th style="text-align: left;">
+                                             {!$Label.DHC_Measure_Action}
+                                            </th> 
+                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody>             
+                                        <apex:repeat var="cases" value="{!concurrentlimitNotification}">
+                                        <tr>               
+                                            <td class="tdset" style="{!IF(cases.Priority__c == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;',IF(cases.Priority__c == 'Yellow','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #2ecc71; border-top-left-radius: 5px; border-bottom-left-radius: 5px;'))}">
+                                            
+                                            <apex:outputText value="{!cases.Display_Name__c}"/>
+                                            </td>
+                                            <td class="tdset" style="text-align: center;" >
+                                                <i class="fa fa-font-awesome" style="{!IF(cases.Priority__c == 'Red','color: #ce4844; font-size: 15px;',IF(cases.Priority__c == 'Yellow','color: #F9BF3B; font-size: 15px;','color: #2ecc71; font-size: 15px;'))}
+                                                "></i>
+                                            </td>
+                                            <td class="tdset" style="text-align: right;">
+                                            {!cases.Max_Limit__c}
+                                            </td>
+                                            <td class="tdset" style="text-align: right;">
+                                            {!cases.LImit_Utilization__c}
+                                            </td>
+                                             <td class="tdset" style="text-align: right;">
+                                                {!cases.Percentage_Used__c} %
+                                            </td>
+                                            <td class="tdset" style="text-align: left;">
+                                            <apex:outputPanel rendered="{!IF(OR(cases.Priority__c == 'Red',cases.Priority__c == 'Yellow'), TRUE, FALSE)}">
+                                            {!cases.Measure__c}
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!IF(AND(cases.Priority__c != 'Red',cases.Priority__c != 'Yellow'), TRUE, FALSE)}">
+                                                -
+                                            </apex:outputPanel>
+                                            </td>                                       
+                                       </tr>
+                                       </apex:repeat>
+                                   </tbody>            
+                                </table>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!runtimeCheck}">
+                                <table class="tableset" cellspacing="0px" style="border-collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                            {!$Label.DHC_Limit}
+                                            </th>
+                                            <th style="text-align: center;">
+                                             {!$Label.DHC_Status} 
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Total_Limit}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Utilization}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Percentage_Used}
+                                            </th>                                       
+                                            <th style="text-align: left;">
+                                             {!$Label.DHC_Measure_Action}
+                                            </th> 
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        <apex:repeat var="str" value="{!ListofConcurrentLimits}" >
+                                            <tr>
+                                                <td class="tdset" style="{!IF(str.priorstr == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;',IF(str.priorstr == 'Yellow','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #2ecc71; border-top-left-radius: 5px; border-bottom-left-radius: 5px;'))}">
+                                                     
+                                                    <apex:outputText value="{!str.resourcename}"/>
+                                                 </td>
+                                                <td class="tdset" style="text-align: center;" >
+                                                     <i class="fa fa-font-awesome" style="{!IF(str.priorstr == 'Red','color: #ce4844; font-size: 15px;',IF(str.priorstr == 'Yellow','color: #F9BF3B; font-size: 15px;','color: #2ecc71; font-size: 15px;'))}
+                                                    "></i>
+                                                </td>
+                                                <td class="tdset" style="text-align: right;">
+                                                    {!str.MaxLimit}
+                                                </td>
+                                                <td class="tdset" style="text-align: right;">
+                                                    {!str.Remaining}
+                                                </td>
+                                                <td class="tdset" style="text-align: right;">
+                                                    {!str.PercentageUsed} %
+                                                </td>
+                                                <td class="tdset" style="text-align: left;">
+                                                <apex:outputPanel rendered="{!IF(OR(str.priorstr == 'Red',str.priorstr == 'Yellow'), TRUE, FALSE)}">
+                                                    {!str.measureStr}
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!IF(AND(str.priorstr != 'Red',str.priorstr != 'Yellow'), TRUE, FALSE)}">
+                                                    -
+                                                </apex:outputPanel>
+                                                
+                                                 </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </tbody> 
+                                </table>
+                            </apex:outputPanel>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="width: 100%; float: left;">
+            <div style="width: 100%; float: left;">
+                <div id="RunTimeLimitComponentCon" class="containerToggleHeader grad1" style="width: 100%; float: left; padding: 8px 0px 8px 20px;  box-sizing: border-box; cursor: pointer; margin-top: 10px; color: white;font-size:16px;">
+                    {!$Label.DHC_Storage_Limit}
+                    <i class="fa fa-plus-square minMaxIcon" aria-hidden="true" style="float: right; height:5px; width: 20px;"></i>
+                </div>
+                <div style="width: 100%; float: left; box-shadow: 0px 0px 2px 2px #ccc;">
+                    <div class="RunTimeLimitComponentCon limitContainer" style="margin: 0 auto; width:97%;padding-top: 5px;display: none;">
+                         <div style="float:left; width:100%; margin-bottom: 10px;">
+                            <apex:outputPanel rendered="{!offlineCheck}">
+                                <table class="tableset" cellspacing="0px" style="border-collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                            {!$Label.DHC_Limit}
+                                            </th>
+                                            <th style="text-align: center;">
+                                             {!$Label.DHC_Status} 
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Total_Limit}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Utilization}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Percentage_Used}
+                                            </th>                                       
+                                            <th style="text-align: left;">
+                                             {!$Label.DHC_Measure_Action}
+                                            </th>                                       
+                                        </tr>
+                                    </thead>
+                                    <tbody>             
+                                        <apex:repeat var="cases" value="{!storagelimitNotification}">
+                                        <tr>               
+                                            <td class="tdset" style="{!IF(cases.Priority__c == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;',IF(cases.Priority__c == 'Yellow','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #2ecc71; border-top-left-radius: 5px; border-bottom-left-radius: 5px;'))}">
+                                            
+                                            <apex:outputText value="{!cases.Display_Name__c}"/>
+                                            </td>
+                                            <td class="tdset" style="text-align: center;" >
+                                                <i class="fa fa-font-awesome" style="{!IF(cases.Priority__c == 'Red','color: #ce4844; font-size: 15px;',IF(cases.Priority__c == 'Yellow','color: #F9BF3B; font-size: 15px;','color: #2ecc71; font-size: 15px;'))}
+                                                "></i>
+                                            </td>
+                                            <td class="tdset" style="text-align: right;">
+                                            {!cases.Max_Limit__c} {!cases.Unit__c} 
+                                            </td>
+                                            <td class="tdset" style="text-align: right;">
+                                            {!cases.LImit_Utilization__c} {!cases.Unit__c} 
+                                            </td>
+                                            <td class="tdset" style="text-align: right;">
+                                            {!cases.Percentage_Used__c} %
+                                            </td>                                       
+                                            <td class="tdset" style="text-align: left;">
+                                            <apex:outputPanel rendered="{!IF(OR(cases.Priority__c == 'Red',cases.Priority__c == 'Yellow'), TRUE, FALSE)}">
+                                            {!cases.Measure__c}
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!IF(AND(cases.Priority__c != 'Red',cases.Priority__c != 'Yellow'), TRUE, FALSE)}">
+                                                -
+                                            </apex:outputPanel>
+                                            </td>                                       
+                                       </tr>
+                                       </apex:repeat>
+                                   </tbody>            
+                                </table>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!runtimeCheck}">
+                                <table class="tableset" cellspacing="0px" style="border-collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                            {!$Label.DHC_Limit}
+                                            </th>
+                                            <th style="text-align: center;">
+                                             {!$Label.DHC_Status} 
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Total_Limit}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Utilization}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Percentage_Used}
+                                            </th>                                       
+                                            <th style="text-align: left;">
+                                             {!$Label.DHC_Measure_Action}
+                                            </th> 
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        <apex:repeat var="str" value="{!ListofStorageLimits}" >
+                                            <tr>
+                                                <td class="tdset" style="{!IF(str.priorstr == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;',IF(str.priorstr == 'Yellow','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #2ecc71; border-top-left-radius: 5px; border-bottom-left-radius: 5px;'))}">
+                                                     
+                                                    <apex:outputText value="{!str.resourcename}"/>
+                                                </td>
+                                                <td class="tdset" style="text-align: center;" >
+                                                     <i class="fa fa-font-awesome" style="{!IF(str.priorstr == 'Red','color: #ce4844; font-size: 15px;',IF(str.priorstr == 'Yellow','color: #F9BF3B; font-size: 15px;','color: #2ecc71; font-size: 15px;'))}
+                                                    "></i>
+                                                </td>
+                                                <td class="tdset" style="text-align: right;">
+                                                    {!str.MaxLimit} MB
+                                                </td>
+                                                <td class="tdset" style="text-align: right;">
+                                                    {!str.Remaining} MB
+                                                </td>
+                                                <td class="tdset" style="text-align: right;">
+                                                    {!str.PercentageUsed} %
+                                                </td>
+                                                <td class="tdset" style="text-align: left;">
+                                                <apex:outputPanel rendered="{!IF(OR(str.priorstr == 'Red',str.priorstr == 'Yellow'), TRUE, FALSE)}">
+                                                    {!str.measureStr}
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!IF(AND(str.priorstr != 'Red',str.priorstr != 'Yellow'), TRUE, FALSE)}">
+                                                    -
+                                                </apex:outputPanel>
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </tbody> 
+                                </table>
+                            </apex:outputPanel>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+                <div style="width: 100%; float: left;">
+            <div style="width: 100%; float: left;">
+                <div id="apexcount" class="containerToggleHeader grad1" style="width: 100%; float: left; padding: 8px 0px 8px 20px;  box-sizing: border-box; cursor: pointer; margin-top: 10px; color: white;font-size:16px;">
+                    {!$label.DHC_APEXCODECOUNT}
+                    <i class="fa fa-plus-square minMaxIcon" aria-hidden="true" style="float: right; height:5px; width: 20px;"></i>
+                </div>
+                <div style="width: 100%; float: left; box-shadow: 0px 0px 2px 2px #ccc;">
+                    <div class="apexcount limitContainer" style="margin: 0 auto; width:97%;padding-top: 5px;display: none;">
+                         <div style="float:left; width:100%; margin-bottom: 10px;">
+                            <apex:outputPanel >
+                                <table class="tableset" cellspacing="0px" style="border-collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                            {!$Label.DHC_Limit}
+                                            </th>
+                                            <th style="text-align: center;">
+                                             {!$Label.DHC_Status} 
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Total_Limit}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Utilization}
+                                            </th>
+                                            <th style="text-align: right;">
+                                             {!$Label.DHC_Percentage_Used}
+                                            </th>                                       
+                                            <th style="text-align: left;">
+                                             {!$Label.DHC_Measure_Action}
+                                            </th>                                       
+                                        </tr>
+                                    </thead>
+                                    <tbody>             
+                                        <apex:repeat var="cases" value="{!currentApexCountLst}">
+                                        <tr>               
+                                            <td class="tdset" style="{!IF(cases.Priority__c == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;',IF(cases.Priority__c == 'Yellow','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #2ecc71; border-top-left-radius: 5px; border-bottom-left-radius: 5px;'))}">
+                                            
+                                            <apex:outputText value="{!cases.Display_Name__c}"/>
+                                            </td>
+                                            <td class="tdset" style="text-align: center;" >
+                                                <i class="fa fa-font-awesome" style="{!IF(cases.Priority__c == 'Red','color: #ce4844; font-size: 15px;',IF(cases.Priority__c == 'Yellow','color: #F9BF3B; font-size: 15px;','color: #2ecc71; font-size: 15px;'))}
+                                                "></i>
+                                            </td>
+                                            <td class="tdset" style="text-align: right;">
+                                            {!cases.Max_Limit__c} {!cases.Unit__c} 
+                                            </td>
+                                            <td class="tdset" style="text-align: right;">
+                                            {!cases.LImit_Utilization__c} {!cases.Unit__c} 
+                                            </td>
+                                            <td class="tdset" style="text-align: right;">
+                                            {!cases.Percentage_Used__c} %
+                                            </td>                                       
+                                            <td class="tdset" style="text-align: left;">
+                                            <apex:outputPanel rendered="{!IF(OR(cases.Priority__c == 'Red',cases.Priority__c == 'Yellow'), TRUE, FALSE)}">
+                                            {!cases.Measure__c}
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!IF(AND(cases.Priority__c != 'Red',cases.Priority__c != 'Yellow'), TRUE, FALSE)}">
+                                                -
+                                            </apex:outputPanel>
+                                            </td>                                       
+                                       </tr>
+                                       </apex:repeat>
+                                   </tbody>            
+                                </table>
+                            </apex:outputPanel>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </apex:form>
+</apex:page>

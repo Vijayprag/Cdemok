@@ -1,0 +1,730 @@
+<apex:page controller="DHC_StaticLimitController" sidebar="false" showHeader="true">
+    <!-- Start - Include Script & BootStrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" />
+    <apex:includeScript value="{!URLFOR($Resource.DHC_DesignResource,'/js/jquery.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.DHC_RESOURCE,'/DHC_RESOURCE/jquery-ui.css')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.DHC_RESOURCE,'/DHC_RESOURCE/jquery-ui.js')}"/>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <!-- Start - Include Script & BootStrap -->
+    <!-- Start - Script For PIE CHART-->
+    <script>
+    $(document).ready(function() {
+        var pieStr = '{!dataSetType}';
+        $('#typeContainer').highcharts({
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: 'RunTime-Limit Threshold Breaches (by Type)'
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage: .1f}%</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage: .1f} %',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+                }
+            },
+            series: [{
+                name: '-',
+                colorByPoint: true,
+                data:JSON.parse(pieStr)
+            }]
+        });
+    });
+    </script>
+    <script>
+      function checkForHighChartLogo(){
+        console.log("checkForHighChartLogo executed...");
+        setTimeout(function(){
+            var textHtml = $("text").html();
+            if(textHtml == null || textHtml == "undefined"){
+                console.log("checkForHighChartLogo Not found...");
+                checkForHighChartLogo();
+            }
+            else{
+                $("text").each(function(){
+                    if($(this).text() == "Highcharts.com"){
+                        $(this).hide();
+                    }
+                });
+            }
+        }, 200);
+      }
+      $( function() {
+        checkForHighChartLogo();
+        $(".containerToggleHeader").click(function(){
+            var idOfDetailContainer = $(this).attr("id");
+            $(".limitContainer").hide();
+            $("." + idOfDetailContainer).toggle();
+            $(".minMaxIcon").each(function(){
+                if($(this).hasClass("fa-minus-square")){
+                    $(this).removeClass("fa-minus-square");
+                    $(this).addClass("fa-plus-square");
+                }           
+            });
+            
+            $(this).find(".fa").each(function(){
+                if($(this).hasClass("fa-plus-square")){
+                    $(this).removeClass("fa-plus-square");
+                }
+                $(this).addClass("fa-minus-square");
+            });
+            
+        });
+        
+        $( "#dialog" ).dialog({
+          autoOpen: false,
+          show: {
+            effect: "blind",
+            duration: 100
+          },
+          hide: {
+            effect: "explode",
+            duration: 1000
+          }
+        });
+     
+        $( ".opener" ).on( "click", function() {
+          //$( "#dialog" ).dialog( "open" );
+           //alert($(this).attr('value'));
+          window.open("/apex/DHC_RunTimeLimits");
+        });
+      } );
+      
+      function whenClicked() 
+        {
+           window.top.close();
+          opener.location.href = "/apex/DHC_SYSTEMLIMITUSAGE";
+        
+        }
+    </script>
+    <!-- END - Script For PIE CHART-->
+    <!-- Start - CSS for Form and Buttons -->
+    <style>
+        .tableset{
+            width: 42%;
+            float: right;
+            padding-top:105px;
+        }
+        a{
+            color:#1797c0;
+        }
+        
+        .tableset thead tr th, .tableset tbody tr td{
+            text-align: left;
+            padding: 8px 20px 8px 15px;
+            border: 1px solid #f2f3f3;      
+        }
+        
+        .tableset thead tr th{
+            background-color: #1797c0;
+            border: 1px solid #ccc; 
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 1px black;
+        }
+        
+        .containerToggleHeader:hover{
+            box-shadow: 0px 0px 2px 2px #ccc;
+        }
+         .topHeader{
+        width:100%;
+        height:100px;
+        float:left;
+        background-color: #ecf0f1;
+        box-sizing: border-box;
+        border: 2px solid #ecf0f1;
+        }
+    </style>
+    <!-- End - CSS for Form and Buttons -->
+    
+    <apex:form >
+        <a href="#" onclick="whenClicked()" style="text-decoration: none;">
+            <i class="fa fa-arrow-circle-left" aria-hidden="true" style="padding-right:10px;float: left; font-size: 46px; color: #1797c0;">
+            </i>
+            <div style="font-size: 17px;font-weight: bolder;color: #1797c0;padding-right: 10px;padding-top: 10px; ">{!$Label.DHC_Back}
+            </div>
+        </a>
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.75; z-index: 1000; background-color: black;">
+                    &nbsp;
+                </div>
+                <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 30% 50%">
+                    <img src="{!$Resource.DHC_ProgressBar}" width="100" height="100" />
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+        <div id="RunTimeLimitTypeContainer" class="containerToggleHeader" style="width: 100%; float: left; padding: 8px 0px 8px 20px; box-sizing: border-box; cursor: pointer;background-color: #1797c0;color: white; font-size:16px;">
+            {!$Label.DHC_Runtime_Threshold}
+            <i class="fa fa-minus-square minMaxIcon" aria-hidden="true" style="float: right; height:5px; width: 20px;"></i>
+        </div>
+        <div style="width: 100%; float: left; padding-top: 2px; background-color: #DCC6E0; box-shadow: 0px 0px 2px 2px #ccc;">
+        </div>
+        <div class="RunTimeLimitTypeContainer limitContainer" style="margin-top: 60px; width: 100%;">
+            <apex:outputPanel id="thePanel1">
+                <script>
+                $(document).ready(function() {
+                    var pieStr = '{!dataSetType}';
+                    $('#typeContainer').highcharts({
+                        chart: {
+                            plotBackgroundColor: null,
+                            plotBorderWidth: null,
+                            plotShadow: false,
+                            type: 'pie'
+                        },
+                        title: {
+                            text: 'RunTime-Limit Threshold Breaches (by Type)'
+                        },
+                        tooltip: {
+                            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                        },
+                        plotOptions: {
+                            pie: {
+                                allowPointSelect: true,
+                                cursor: 'pointer',
+                                dataLabels: {
+                                    enabled: true,
+                                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                                    style: {
+                                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                                    }
+                                }
+                            }
+                        },
+                        series: [{
+                            name: '-',
+                            colorByPoint: true,
+                            data:JSON.parse(pieStr)
+                        }]
+                    });
+                    checkForHighChartLogo();
+                });
+                $(document).ready(function() {
+                    $( "#RunTimeLimitTypeContainer" ).click(function() {
+                        var pieStr = '{!dataSetType}';
+                        $('#typeContainer').highcharts({
+                            chart: {
+                                plotBackgroundColor: null,
+                                plotBorderWidth: null,
+                                plotShadow: false,
+                                type: 'pie'
+                            },
+                            title: {
+                                text: 'RunTime-Limit Threshold Breaches (by Type)'
+                            },
+                            tooltip: {
+                                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                            },
+                            plotOptions: {
+                                pie: {
+                                    allowPointSelect: true,
+                                    cursor: 'pointer',
+                                    dataLabels: {
+                                        enabled: true,
+                                        format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                                        style: {
+                                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                                        }
+                                    }
+                                }
+                            },
+                            series: [{
+                                name: '-',
+                                colorByPoint: true,
+                                data:JSON.parse(pieStr)
+                            }]
+                        });
+                        checkForHighChartLogo();
+                    });
+                });
+                </script>
+                <div>
+                    <div style="width:28%;border-top-left-radius: 5px;border-bottom-left-radius: 5px;background-color: #1797c0;border: 1px solid #ccc;color: white;font-weight: bold;float:right;">
+                        <p style="float: right;margin-right: 25px;">{!$Label.DHC_Hard_Limit_Breaches} </p>
+                        <apex:inputCheckbox value="{!HardLimitType}" style="float:right;margin-top: 13px;margin-left: 33px;" disabled="{!HardLimitType}" >
+                            <apex:actionsupport event="onclick" action="{!hardLimitmethodByType}" reRender="thePanel1" status="status"/>
+                        </apex:inputCheckbox> 
+                        <p style="float: right;">{!$Label.DHC_Soft_Limit_Breaches} </p>
+                        <apex:inputCheckbox id="inputID" value="{!SoftLimitType}" style="float:right;margin-top: 13px;" disabled="{!SoftLimitType}" >
+                            <apex:actionsupport event="onclick" action="{!SoftLimitmethodByType}" reRender="thePanel1" status="status"/>
+                        </apex:inputCheckbox>
+                    </div>
+                </div>
+                <apex:outputPanel rendered="{!HardLimitType}">
+                    <div id="typeContainer" style="float:left; height: 400px; width: 50%; margin: 0 auto"></div>
+                    <div id="dialog" title="Component Details">
+                      <p></p>
+                    </div>
+                    <table class="tableset" cellspacing="0px" style="border-collapse;">
+                        <thead>
+                            <tr>
+                                <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                 {!$Label.DHC_Limit}
+                                </th>
+                                <th style="text-align: center;">
+                                 {!$Label.DHC_Status}
+                                </th>
+                                <th style="text-align: center;">
+                                 {!$Label.DHC_Count}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <apex:repeat var="byType" value="{!aggregateDataByTypelst}">
+                               <tr>
+                                    <td class="tdset" style="{!IF(byType.Priority == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;')};cursor:pointer;">
+                                        <apex:outputlink value="/apex/DHC_RunTimeLimits" target="_blank"> {!byType.DisplayName} <apex:param name="type" value="{!byType.DisplayName}"/><apex:param name="prior" value="{!byType.Priority}"/> </apex:outputlink>
+                                        
+                                    </td>
+                                    <td class="tdset" style="text-align: center;" >
+                                        <i class="fa fa-font-awesome" style="{!IF(byType.Priority == 'Red','color: #ce4844; font-size: 15px;','color: #F9BF3B; font-size: 15px;')}
+                                        "></i>
+                                    </td>
+                                    <td class="tdset" style="text-align: center;" >
+                                        {!byType.noOfCount}
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                            <tr>
+                                <td colspan="2" class="tdset" style="text-align: center;border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;" >
+                                    <b>{!$Label.DHC_Total_Count}</b> 
+                                </td>
+                                
+                                <td class="tdset" style="text-align: center;" >
+                                    <b>{!TotalCountHardBYType}</b>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!SoftLimitType}">
+                    <div id="typeContainer" style="float:left; height: 400px; width: 50%; margin: 0 auto"></div>
+                    <div id="dialog" title="Component Details">
+                      <p></p>
+                    </div>
+                    <table class="tableset" cellspacing="0px" style="border-collapse;">
+                        <thead>
+                            <tr>
+                                <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                 {!$Label.DHC_Limit}
+                                </th>
+                                <th style="text-align: center;">
+                                 {!$Label.DHC_Status}
+                                </th>
+                                <th style="text-align: center;">
+                                 {!$Label.DHC_Count}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <apex:repeat var="byType" value="{!aggregateSoftDataByTypelst}">
+                               <tr>
+                                    <td class="tdset" style="{!IF(byType.Priority == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;')};cursor:pointer;">
+                                        <apex:outputlink value="/apex/DHC_RunTimeLimits" target="_blank"> {!byType.DisplayName} <apex:param name="type" value="{!byType.DisplayName}"/><apex:param name="prior" value="{!byType.Priority}"/> </apex:outputlink>
+                                        
+                                    </td>
+                                    <td class="tdset" style="text-align: center;" >
+                                        <i class="fa fa-font-awesome" style="{!IF(byType.Priority == 'Red','color: #ce4844; font-size: 15px;','color: #F9BF3B; font-size: 15px;')}
+                                        "></i>
+                                    </td>
+                                    <td class="tdset" style="text-align: center;" >
+                                    {!byType.noOfCount}
+                                </td>
+                                </tr>
+                            </apex:repeat>
+                        </tbody>
+                        <tr>
+                           <td colspan="2" class="tdset" style="text-align: center;border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;" >
+                                    <b>{!$Label.DHC_Total_Count}</b> 
+                            </td>
+                            
+                            <td class="tdset" style="text-align: center;" >
+                                <b>{!TotalCountSoftBYType}</b>
+                            </td>
+                        </tr>
+                    </table>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </div>
+        
+        <div id="RunTimeLimitSobjectContainer" class="containerToggleHeader" style="width: 100%; float: left; padding: 8px 0px 8px 20px;  box-sizing: border-box; cursor: pointer; margin-top: 10px;background-color: #1797c0;color: white;font-size:16px;">
+            {!$Label.DHC_Runtime_By_sObject}
+            <i class="fa fa-plus-square minMaxIcon" aria-hidden="true" style="float: right; height:5px; width: 20px;"></i>
+        </div>
+        <div style="width: 100%; float: left; padding-top: 2px; background-color: #DCC6E0; box-shadow: 0px 0px 2px 2px #ccc;">
+        </div>
+        <div class="RunTimeLimitSobjectContainer limitContainer" style="margin-top: 50px;float:left; width: 100%; display: none;">
+        <apex:outputPanel id="thePanel2">
+            <script>
+            $(document).ready(function() {
+                var pieStr = '{!dataset}';
+                $('#container').highcharts({
+                    chart: {
+                        plotBackgroundColor: null,
+                        plotBorderWidth: null,
+                        plotShadow: false,
+                        type: 'pie'
+                    },
+                    title: {
+                        text: 'RunTime-Limit Threshold Breaches (by Sobject)'
+                    },
+                    tooltip: {
+                        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                    },
+                    plotOptions: {
+                        pie: {
+                            allowPointSelect: true,
+                            cursor: 'pointer',
+                            dataLabels: {
+                                enabled: true,
+                                format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                                style: {
+                                    color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                                }
+                            }
+                        }
+                    },
+                    series: [{
+                        name: '-',
+                        colorByPoint: true,
+                        data:JSON.parse(pieStr)
+                    }]
+                });
+                checkForHighChartLogo();
+            });
+            $(document).ready(function() {
+                $( "#RunTimeLimitSobjectContainer" ).click(function() {
+                    var pieStr = '{!dataset}';
+                    $('#container').highcharts({
+                        chart: {
+                            plotBackgroundColor: null,
+                            plotBorderWidth: null,
+                            plotShadow: false,
+                            type: 'pie'
+                        },
+                        title: {
+                            text: 'RunTime-Limit Threshold Breaches (by Sobject)'
+                        },
+                        tooltip: {
+                            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                        },
+                        plotOptions: {
+                            pie: {
+                                allowPointSelect: true,
+                                cursor: 'pointer',
+                                dataLabels: {
+                                    enabled: true,
+                                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                                    style: {
+                                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                                    }
+                                }
+                            }
+                        },
+                        series: [{
+                            name: '-',
+                            colorByPoint: true,
+                            data:JSON.parse(pieStr)
+                        }]
+                    });
+                    checkForHighChartLogo();
+                });
+            });
+            </script>
+                <div style="width:28%;border-top-left-radius: 5px;border-bottom-left-radius: 5px;background-color: #1797c0;border: 1px solid #ccc;color: white;font-weight: bold;float:right;">
+                    <p style="float: right;margin-right: 25px;">{!$Label.DHC_Hard_Limit_Breaches} </p>
+                    <apex:inputCheckbox value="{!HardLimitSobject}" style="float:right; margin-top:13px;margin-left:33px;" disabled="{!HardLimitSobject}" >
+                        <apex:actionsupport event="onclick" action="{!hardLimitmethodBySobject}" reRender="thePanel2" status="status"/>
+                    </apex:inputCheckbox> 
+                    <p style="float: right;">{!$Label.DHC_Soft_Limit_Breaches} </p>
+                    <apex:inputCheckbox value="{!SoftLimitSobject}" style="float:right;margin-top:13px;" disabled="{!SoftLimitSobject}">
+                        <apex:actionsupport event="onclick" action="{!SoftLimitmethodBySobject}" reRender="thePanel2" status="status"/>
+                    </apex:inputCheckbox>
+                </div>
+                <apex:outputPanel rendered="{!HardLimitSobject}">
+                    <div id="container" style=" margin-right: 102px; float:left;  height: 300px; width: 50%;"></div>
+                    <table class="tableset" cellspacing="0px" style="border-collapse;width:41%;padding-top: 55px;">
+                        <thead>
+                            <tr>
+                                <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                    {!$Label.DHC_Module_Name}
+                                </th>
+                                <th style="text-align: center;">
+                                    {!$Label.DHC_Status}
+                                </th>
+                                <th style="text-align: center;">
+                                    {!$Label.DHC_Count}
+                                </th>
+                             </tr>
+                        </thead>
+                        <tbody>
+                            <apex:repeat var="Obj" value="{!aggregateDataBySobjectlst}">
+                                <tr>
+                                    <td class="tdset" style="{!IF(Obj.Priority == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;')};cursor:pointer;">
+                                        <apex:outputlink value="/apex/DHC_RunTimeLimits" target="_blank"> {!Obj.SobjectName} <apex:param name="Sobj" value="{!Obj.SobjectName}"/><apex:param name="prior" value="{!Obj.Priority}"/> </apex:outputlink>
+                                    </td>
+                                    <td class="tdset" style="text-align: center;" >
+                                        <i class="fa fa-font-awesome" style="{!IF(Obj.Priority == 'Red','color: #ce4844; font-size: 15px;','color: #F9BF3B; font-size: 15px;')}
+                                        "></i>
+                                    </td>
+                                    <td class="tdset" style="text-align: center;" >
+                                       {!Obj.noOfCount}
+                                    </td>
+                                 </tr>
+                            </apex:repeat>
+                            <tr >
+                                <td colspan="2" class="tdset" style="text-align: center;border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;" >
+                                   <b> {!$Label.DHC_Total_Count}</b> 
+                                </td>
+                                
+                                <td class="tdset" style="text-align: center;" >
+                                    <b>{!TotalCountHardBYSobject}</b>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table><br/>
+                 </apex:outputPanel>
+                 <apex:outputPanel rendered="{!SoftLimitSobject}">
+                    <div id="container" style=" margin-right: 102px; float:left;  height: 300px; width: 50%;"></div>
+                    <table class="tableset" cellspacing="0px" style="border-collapse;width:41%;padding-top: 55px;">
+                        <thead>
+                            <tr>
+                                <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                    {!$Label.DHC_Module_Name}
+                                </th>
+                                <th style="text-align: center;">
+                                    {!$Label.DHC_Status}
+                                </th>
+                                <th style="text-align: center;">
+                                    {!$Label.DHC_Count}
+                                </th>
+                             </tr>
+                        </thead>
+                        <tbody>
+                            <apex:repeat var="Obj" value="{!aggregateSoftDataBySobjectlst}">
+                                <tr>
+                                    <td class="tdset" style="{!IF(Obj.Priority == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;')};cursor:pointer;">
+                                        <apex:outputlink value="/apex/DHC_RunTimeLimits" target="_blank"> {!Obj.SobjectName} <apex:param name="Sobj" value="{!Obj.SobjectName}"/><apex:param name="prior" value="{!Obj.Priority}"/> </apex:outputlink>
+                                    </td>
+                                    <td class="tdset" style="text-align: center;" >
+                                        <i class="fa fa-font-awesome" style="{!IF(Obj.Priority == 'Red','color: #ce4844; font-size: 15px;','color: #F9BF3B; font-size: 15px;')}
+                                        "></i>
+                                    </td>
+                                    <td class="tdset" style="text-align: center;" >
+                                       {!Obj.noOfCount}
+                                    </td>
+                                 </tr>
+                            </apex:repeat>
+                            <tr>
+                           <td colspan="2" class="tdset" style="text-align:center; border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;" >
+                                   <b> {!$Label.DHC_Total_Count}</b> 
+                            </td>
+                            
+                            <td class="tdset" style="text-align: center;" >
+                                <b>{!TotalCountSoftBYSobject}</b>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                 </apex:outputPanel>
+            </apex:outputPanel>
+        </div>
+        <div id="RunTimeLimitComponentContainer" class="containerToggleHeader" style="width: 100%; float: left; padding: 8px 0px 8px 20px;  box-sizing: border-box; cursor: pointer; margin-top: 10px; background-color: #1797c0;color: white;font-size:16px;">
+            {!$Label.DHC_Runtime_By_Component}
+            <i class="fa fa-plus-square minMaxIcon" aria-hidden="true" style="float: right; height:5px; width: 20px;"></i>
+        </div>
+        <div style="width: 100%; float: left; padding-top: 2px; background-color: #DCC6E0; box-shadow: 0px 0px 2px 2px #ccc;">
+        </div>
+        <div class="RunTimeLimitComponentContainer limitContainer" style="margin-top: 60px;float:left; width: 100%; display: none;">
+            <apex:outputPanel id="thePanel3">
+            <script>
+            $(document).ready(function() {
+                var pieStr = '{!compdataset}';
+                    $('#compContainer').highcharts({
+                        chart: {
+                            plotBackgroundColor: null,
+                            plotBorderWidth: null,
+                            plotShadow: false,
+                            type: 'pie'
+                        },
+                        title: {
+                            text: 'RunTime-Limit Threshold Breaches(by Component)'
+                        },
+                        tooltip: {
+                            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                        },
+                        plotOptions: {
+                            pie: {
+                                allowPointSelect: true,
+                                cursor: 'pointer',
+                                dataLabels: {
+                                    enabled: true,
+                                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                                    style: {
+                                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                                    }
+                                }
+                            }
+                        },
+                        series: [{
+                            name: '-',
+                            colorByPoint: true,
+                            data:JSON.parse(pieStr)
+                        }]
+                    });
+                    checkForHighChartLogo();
+                });
+                $(document).ready(function() {
+                $( "#RunTimeLimitComponentContainer" ).click(function() {
+                    var pieStr = '{!compdataset}';
+                    $('#compContainer').highcharts({
+                        chart: {
+                            plotBackgroundColor: null,
+                            plotBorderWidth: null,
+                            plotShadow: false,
+                            type: 'pie'
+                        },
+                        title: {
+                            text: 'RunTime-Limit Threshold Breaches (by Component)'
+                        },
+                        tooltip: {
+                            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                        },
+                        plotOptions: {
+                            pie: {
+                                allowPointSelect: true,
+                                cursor: 'pointer',
+                                dataLabels: {
+                                    enabled: true,
+                                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                                    style: {
+                                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                                    }
+                                }
+                            }
+                        },
+                        series: [{
+                            name: '-',
+                            colorByPoint: true,
+                            data:JSON.parse(pieStr)
+                        }]
+                    });
+                    checkForHighChartLogo();
+                });
+            });
+            </script>
+                <div style="width:28%;border-top-left-radius: 5px;border-bottom-left-radius: 5px;background-color: #1797c0;border: 1px solid #ccc;color: white;font-weight: bold;float:right;">
+                    <p style="float: right;margin-right: 25px;">{!$Label.DHC_Hard_Limit_Breaches}</p>
+                         <apex:inputCheckbox value="{!HardLimitComponent}" style="float:right; margin-top:13px;margin-left:33px;" disabled="{!HardLimitComponent}">
+                            <apex:actionsupport event="onclick" action="{!hardLimitmethodByComponent}" reRender="thePanel3" status="status"/>
+                        </apex:inputCheckbox>
+                    <p style="float: right;">{!$Label.DHC_Soft_Limit_Breaches}</p>
+                    <apex:inputCheckbox value="{!SoftLimitComponent}" style="float:right;margin-top:13px;" disabled="{!SoftLimitComponent}" >
+                        <apex:actionsupport event="onclick" action="{!SoftLimitmethodByComponent}" reRender="thePanel3" status="status"/>
+                    </apex:inputCheckbox>
+                </div>
+                <apex:outputPanel rendered="{!HardLimitComponent}">
+                    <div id="compContainer" style="float:left;padding-right: 55px; height: 400px; width: 50%; margin: 0 auto"></div>
+                    <table class="tableset" cellspacing="0px" style="border-collapse; ">
+                        <thead>
+                            <tr>
+                                <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                   {!$Label.DHC_Component_Name}
+                                </th>
+                                <th style="text-align: center;">
+                                    {!$Label.DHC_Status}
+                                </th>
+                                 <th style="text-align: center;">
+                                    {!$Label.DHC_Count}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <apex:repeat var="component" value="{!aggregateDataByComponentlst}">
+                                <tr>
+                                    <td class="tdset" style="{!IF(component.Priority == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;')};cursor:pointer;">
+                                       <apex:outputlink value="/apex/DHC_RunTimeLimits" target="_blank"> {!component.ComponentName} <apex:param name="Comp" value="{!component.ComponentName}"/><apex:param name="prior" value="{!component.Priority}"/>  </apex:outputlink>
+                                       
+                                    </td>
+                                    <td class="tdset" style="text-align: center;" >
+                                        <i class="fa fa-font-awesome" style="{!IF(component.Priority == 'Red','color: #ce4844; font-size: 15px;','color: #F9BF3B; font-size: 15px;')}
+                                        "></i>
+                                    </td>
+                                    <td class="tdset" style="text-align: center;" >
+                                        {!component.noOfCount}
+                                    </td>
+                                 </tr>
+                            </apex:repeat>
+                            <tr>
+                                <td colspan="2" class="tdset" style="text-align: center;border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;" >
+                                    <b>{!$Label.DHC_Total_Count}</b> 
+                                </td>
+                                
+                                <td class="tdset" style="text-align: center;" >
+                                   <b> {!TotalCountHardBYComponent}</b>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                 </apex:outputPanel>
+                <apex:outputPanel rendered="{!SoftLimitComponent}">
+                    <div id="compContainer" style="float:left;padding-right: 55px; height: 400px; width: 50%; margin: 0 auto"></div>
+                    <table class="tableset" cellspacing="0px" style="border-collapse; ">
+                        <thead>
+                            <tr>
+                                <th style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;">
+                                  {!$Label.DHC_Component_Name}
+                                </th>
+                                <th style="text-align: center;">
+                                    {!$Label.DHC_Status}
+                                </th>
+                                 <th style="text-align: center;">
+                                    {!$Label.DHC_Count}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <apex:repeat var="component" value="{!aggregateSoftDataByComponentlst}">
+                                <tr>
+                                    <td class="tdset" style="{!IF(component.Priority == 'Red','border-left: 3px solid #ce4844; border-top-left-radius: 5px; border-bottom-left-radius: 5px;','border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;')};cursor:pointer;">
+                                       <apex:outputlink value="/apex/DHC_RunTimeLimits" target="_blank"> {!component.ComponentName} <apex:param name="Comp" value="{!component.ComponentName}"/><apex:param name="prior" value="{!component.Priority}"/>  </apex:outputlink>
+                                       
+                                    </td>
+                                    <td class="tdset" style="text-align: center;" >
+                                        <i class="fa fa-font-awesome" style="{!IF(component.Priority == 'Red','color: #ce4844; font-size: 15px;','color: #F9BF3B; font-size: 15px;')}
+                                        "></i>
+                                    </td>
+                                    <td class="tdset" style="text-align: center;" >
+                                        {!component.noOfCount}
+                                    </td>
+                                 </tr>
+                            </apex:repeat>
+                            <tr>
+                                <td colspan="2" class="tdset" style="text-align: center;border-left: 3px solid #F9BF3B; border-top-left-radius: 5px; border-bottom-left-radius: 5px;" >
+                                   <b> {!$Label.DHC_Total_Count}</b> 
+                                </td>
+                                
+                                <td class="tdset" style="text-align: center;" >
+                                    <b>{!TotalCountSoftBYComponent}</b>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </div>
+    </apex:form>
+</apex:page>

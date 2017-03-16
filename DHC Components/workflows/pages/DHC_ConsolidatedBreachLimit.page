@@ -1,0 +1,16 @@
+<apex:page controller="DHC_ConsolidatedBreachViewController" contentType="application/vnd.ms-excel#OrganizationLimitBreachExport.xls" cache="true">
+    <apex:pageBlock title="Organization Limit Breaches Export Results" >
+        <apex:pageBlockTable value="{!runTimelimitNotificationList}" var="breach">
+            <apex:column value="{!breach.Display_Name__c}"/>
+            <apex:column value="{!breach.Priority__c}"/>
+            <apex:column value="{!breach.Limit_Utilization__c}"/>
+            <apex:column value="{!breach.Max_Limit__c}"/>
+            <apex:column value="{!breach.Latest_Breach__c}"/>
+               <!-- <apex:facet name="header">Error Log: Created Date</apex:facet>
+                   <apex:outputText value=" {0,date,MM/dd/yy hh:mm:ss a}"> 
+                       <apex:param value="{!breach.Latest_Breach__c}" /> 
+                   </apex:outputText>
+             </apex:column>-->
+        </apex:pageBlockTable>
+    </apex:pageBlock>
+</apex:page>
